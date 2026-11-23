@@ -27,6 +27,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=__version__)
     subparsers = parser.add_subparsers(dest="command", required=True)
+    sim_parser = subparsers.add_parser("sim-feedback", help="Replay SOL feedback into optimizer memory")
+    sim_parser.add_argument("campaign", type=Path, help="Frozen SOL campaign directory")
     inspect_parser = subparsers.add_parser("inspect", help="Inspect a SWE-Batch Pro JSONL dataset")
     inspect_parser.add_argument("dataset", type=Path, help="Bounded benchmark JSONL file")
     inspect_parser.add_argument(
@@ -95,6 +97,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         return run_package_runtime(arguments[1:])
     args = build_parser().parse_args(arguments)
+    if args.command == "sim-feedback":
+        from opencollab_eval.commands.sim_feedback import replay
+
+        print(json.dumps(replay(args.campaign), ensure_ascii=False))
+        return 0
     if args.command == "inspect":
         identity_key = load_identity_key(args.identity_key_file)
         tasks = tasks_from_rows(
